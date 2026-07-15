@@ -1,22 +1,13 @@
 import { useState } from "react";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useDebouncedCallback } from "use-debounce";
 
-import {
-  deleteNote,
-  fetchNotes,
-} from "../../services/noteService";
-
+import { fetchNotes } from "../../services/noteService";
+import Modal from "../Modal/Modal";
+import NoteForm from "../NoteForm/NoteForm";
 import NoteList from "../NoteList/NoteList";
 import Pagination from "../Pagination/Pagination";
 import SearchBox from "../SearchBox/SearchBox";
-import Modal from "../Modal/Modal";
-import NoteForm from "../NoteForm/NoteForm";
-
 import css from "./App.module.css";
 
 function App() {
@@ -24,17 +15,6 @@ function App() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const queryClient = useQueryClient();
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteNote,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["notes"],
-      });
-    },
-  });
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -62,6 +42,7 @@ function App() {
         perPage: 12,
         search,
       }),
+    placeholderData: keepPreviousData,
   });
 
   return (
@@ -88,10 +69,7 @@ function App() {
       {isError && <p>Something went wrong.</p>}
 
       {data && data.notes.length > 0 && (
-        <NoteList
-          notes={data.notes}
-          onDelete={(id) => deleteMutation.mutate(id)}
-        />
+        <NoteList notes={data.notes} />
       )}
 
       {data && data.totalPages > 1 && (
